@@ -26,7 +26,7 @@ APP = Path(__file__).resolve().parent       # this code
 VAULT = HOME / "vault.json"
 CONFIG = HOME / "config.json"
 REVIEWS = HOME / "reviews"
-PORT = 8765
+PORT = 47613  # uncommon on purpose; 8765 is a popular dev-server port
 PY = HOME / ".venv" / "bin" / "python"
 
 LABELS = {"private_person": "PERSON", "account_number": "ACCOUNT", "private_url": "URL",
@@ -91,7 +91,7 @@ def luhn(s):
                                       for i, x in enumerate(d)) % 10 == 0
 
 
-def server_up():
+def port_open():
     try:
         socket.create_connection(("127.0.0.1", PORT), timeout=0.3).close()
         return True
@@ -99,9 +99,22 @@ def server_up():
         return False
 
 
+def server_up():
+    """True only if OUR model server answers, so text is never sent to another app on the port."""
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=1) as r:
+            return json.load(r).get("service") == "pii-shield"
+    except Exception:
+        return False
+
+
 def ensure_server():
     if server_up():
         return True
+    if port_open():
+        print(f"warning: another app is using port {PORT}, so the PII model can't start",
+              file=sys.stderr)
+        return False
     HOME.mkdir(exist_ok=True)
     log = open(HOME / "server.log", "a")
     subprocess.Popen([str(PY), str(APP / "pii_server.py")], stdout=log, stderr=log,
@@ -114,10 +127,9 @@ def ensure_server():
 
 
 def model_spans(text):
-    if not ensure_server():
-        print("warning: PII model unavailable, using rules only (see ~/.pii-shield/server.log)",
-              file=sys.stderr)
-        return []
+    if not ensure_server():  # rules alone miss names and addresses, so don't pretend
+        sys.exit("error: PII model unavailable; nothing was redacted. "
+                 "See ~/.pii-shield/server.log, or run `pii stop` and try again.")
     req = urllib.request.Request(f"http://127.0.0.1:{PORT}/detect",
                                  data=json.dumps({"text": text}).encode(),
                                  headers={"Content-Type": "application/json"})

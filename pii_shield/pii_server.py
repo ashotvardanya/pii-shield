@@ -1,4 +1,4 @@
-"""Keeps PII-Tracer loaded on 127.0.0.1:8765 so redaction is instant. Exits after 10 idle minutes."""
+"""Keeps PII-Tracer loaded on 127.0.0.1:47613 so redaction is instant. Exits after 10 idle minutes."""
 import json, os, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -41,6 +41,13 @@ def detect(text):
 
 
 class H(BaseHTTPRequestHandler):
+    def do_GET(self):  # identity check, so pii never sends text to some other app on this port
+        data = json.dumps({"service": "pii-shield"}).encode()
+        self.send_response(200 if self.path == "/health" else 404)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_POST(self):
         last[0] = time.time()
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
@@ -64,7 +71,7 @@ def reaper(srv):
     srv.shutdown()
 
 
-srv = ThreadingHTTPServer(("127.0.0.1", 8765), H)
+srv = ThreadingHTTPServer(("127.0.0.1", 47613), H)
 threading.Thread(target=reaper, args=(srv,), daemon=True).start()
-print("PII-Tracer ready on 127.0.0.1:8765", flush=True)
+print("PII-Tracer ready on 127.0.0.1:47613", flush=True)
 srv.serve_forever()
