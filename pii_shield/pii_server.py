@@ -44,8 +44,12 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         last[0] = time.time()
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        data = json.dumps({"spans": detect(body["text"])}).encode()
-        self.send_response(200)
+        try:
+            data, code = json.dumps({"spans": detect(body["text"])}).encode(), 200
+        except Exception as e:  # reply instead of dropping the connection; never echo the text
+            print(f"detect failed: {type(e).__name__}: {e}", flush=True)
+            data, code = json.dumps({"error": type(e).__name__}).encode(), 500
+        self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(data)

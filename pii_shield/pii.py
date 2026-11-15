@@ -121,8 +121,12 @@ def model_spans(text):
     req = urllib.request.Request(f"http://127.0.0.1:{PORT}/detect",
                                  data=json.dumps({"text": text}).encode(),
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=600) as r:
-        return [(a, b, LABELS.get(l, "ID")) for a, b, l in json.load(r)["spans"]]
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return [(a, b, LABELS.get(l, "ID")) for a, b, l in json.load(r)["spans"]]
+    except Exception as e:  # don't fall back silently: rules alone miss names and addresses
+        sys.exit(f"error: PII model failed ({type(e).__name__}); nothing was redacted. "
+                 "See ~/.pii-shield/server.log, or run `pii stop` and try again.")
 
 
 def detect(text, cfg, v):

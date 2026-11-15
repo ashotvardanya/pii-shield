@@ -47,7 +47,8 @@ step "4/7  PII model (Perplexity PII-Tracer, ~1.2 GB, downloaded once)"
 "$PY" - "$REV" <<'EOF' 2>&1 | grep -vE "Warning|warn|Redirects" || true
 import sys
 from transformers import AutoModel
-AutoModel.from_pretrained("perplexity-ai/PII-Tracer", trust_remote_code=True, revision=sys.argv[1])
+m = AutoModel.from_pretrained("perplexity-ai/PII-Tracer", trust_remote_code=True, revision=sys.argv[1])
+m.tokenizer  # cache tokenizer.json too; the server runs offline and can't fetch it later
 print("    model ready")
 EOF
 
