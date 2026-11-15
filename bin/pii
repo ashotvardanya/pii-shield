@@ -1,0 +1,9 @@
+#!/bin/sh
+# pii-shield launcher, installed to ~/.local/bin/pii by install.sh.
+D="$HOME/.pii-shield"
+APP="$D/app"
+case "$1" in
+  guide) exec open "$APP/README.md" ;;
+  chat)  shift; exec "$D/.venv/bin/python" "$APP/chat_app.py" "$@" ;;
+  *)     exec "$D/.venv/bin/python" "$APP/pii.py" "$@" ;;
+esac

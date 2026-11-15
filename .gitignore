@@ -1,0 +1,13 @@
+# never commit personal data
+vault.json
+config.json
+reviews/
+*.redacted.*
+*.restored.*
+server.log
+
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+dist/
