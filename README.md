@@ -85,6 +85,22 @@ pii chat / pii guide / pii stop / pii status
 - **LM Studio models**: use RAM while loaded and unload after 60 idle minutes.
 - Nothing starts when the Mac boots.
 
+## Limitations (please read)
+
+PII Shield is a best-effort safety net, not a guarantee.
+
+- **Detection can miss things.** No model catches all personal data: unusual names, data in
+  images or scanned PDFs (not read at all), and context clues ("my boss at the only bakery in
+  town") can slip through. Check important files with `pii review` before sharing.
+- **The Claude guard is a heuristic.** It blocks the common ways Claude could read an original
+  file, but files attached with the paperclip or drag-and-drop, and creative shell commands, may
+  bypass it. Type paths instead, and keep sensitive files in `~/Sensitive`.
+- **Placeholders hide values, not meaning.** The AI still sees the structure of your text.
+- **macOS on Apple Silicon only** for now. PII-Tracer is strongest in English.
+- **Web tools in LM Studio** send search queries to the internet.
+
+Built on [PII-Tracer](https://huggingface.co/perplexity-ai/PII-Tracer) by Perplexity (MIT).
+
 ## Where things live
 
 | Path | What |
